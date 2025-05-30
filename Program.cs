@@ -1,48 +1,28 @@
-using Microsoft.EntityFrameworkCore;
-using CountryCatalogAPI.Data;
-using CountryCatalogAPI.Models;
-
 var builder = WebApplication.CreateBuilder(args);
 
-// Конфигурация сервисов
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new() { Title = "Country Catalog API", Version = "v1" });
-});
+// Конфигурация для Render
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://*:{port}");
 
-// Подключение БД Supabase
+builder.Services.AddControllers();
+builder.Services.AddSwaggerGen();
+
+// Подключение PostgreSQL
 builder.Services.AddDbContext<CountryCatalogContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-    #if DEBUG
-    options.LogTo(Console.WriteLine, LogLevel.Information); // Логирование SQL в консоль
-    #endif
-});
+    options.UseNpgsql(builder.Configuration["CONNECTION_STRING"]));
 
 var app = builder.Build();
 
-// Настройка конвейера запросов
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => 
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Country API v1");
-        c.RoutePrefix = "swagger";
-    });
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
-// Автоматическое применение миграций при запуске
+app.MapControllers();
+
+// Автомиграции
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<CountryCatalogContext>();
     db.Database.Migrate();
 }
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
 
 app.Run();
