@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+**/.vscode/
+**/.vs/
+**/.idea/
+*.user
+*.suo
+*.cache
+*.swp
+*.swo
+*.log
+*.sql
+*.DS_Store
+appsettings.Development.json
+appsettings.json
+secrets.json
+.env
